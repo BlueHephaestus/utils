@@ -31,22 +31,26 @@ def tts(text, output_file="output.mp3", model="tts-1-hd", voice="fable", chunk_s
 
     open(output_file, "w").close()  # clear the file
 
+    def sent_chunk_iter(text):
+        chunk = ""
+        for sent in tqdm(nltk.sent_tokenize(text), desc="TTS: "):
+            if len(chunk + sent) + 1 < chunk_size:
+                chunk += sent + " "
+            else:
+                yield chunk
+                chunk = ""
+        yield chunk
+
     # Iterate in chunk_size sentence-delimited chunks until all text processed
-    chunk = ""
-    for sent in tqdm(nltk.sent_tokenize(text), desc="TTS: "):
-        if len(chunk+sent)+1 < chunk_size:
-            chunk += sent + " "
-        else:
-            #Process the chunk and reset it
-            response = client.audio.speech.create(
-                model=model,
-                voice=voice,
-                input=chunk
-            )
-            # add this chunk to the file
-            with open(output_file, "ab") as f:
-                for filechunk in response.iter_bytes(chunk_size=1024): # arbitrary chunk size
-                    f.write(filechunk)
+    for chunk in sent_chunk_iter(text):
+
+        # Process the chunk and reset it
+        response = client.audio.speech.create(model=model, voice=voice, input=chunk)
+
+        # add this chunk to the file
+        with open(output_file, "ab") as f:
+            for filechunk in response.iter_bytes(chunk_size=1024): # arbitrary chunk size
+                f.write(filechunk)
 
 class ChatGPT:
     def __init__(self, id="untitled", system_prompt="You are a helpful assistant.", model="gpt-4"):
@@ -130,7 +134,7 @@ class ChatGPT:
         Save the chat history to a file.
         """
         with open(self.history_fname, "w") as f:
-            json.dump(self.history, f)
+            json.dump(self.history, f, indent=2)
 
 if __name__ == "__main__":
     # Test chatgpt asks
