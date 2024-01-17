@@ -5,7 +5,7 @@ import numpy as np
 import hashlib
 
 # NOTE THIS WILL CAUSE YOUR 
-MD5_BUFFER_SIZE = 2**17  # (~.12 million) default unless we run function to get the optimal value for this sytem
+MD5_BUFFER_SIZE = 2**18  # (~.26 million) default unless we run function to get the optimal value for this sytem
 
 def get_optimal_md5_buffer_size():
     # Run md5 hash on an arbitrary 500MB file with different buffer sizes
